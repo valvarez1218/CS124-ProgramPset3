@@ -79,7 +79,7 @@ long plusMinusSum(vector<int> S, MaxHeap &A) {
     long residue = 0;
     assert(S.size() == A.size());
 
-    for (int i=0; i < S.size(); i++) {
+    for (int i=0; i < int(S.size()); i++) {
         residue += A.heap[i]*S[i];
     }
     return abs(residue);
@@ -87,7 +87,7 @@ long plusMinusSum(vector<int> S, MaxHeap &A) {
 
 vector<int> randMovePM(vector<int> &S, int numChanges) {
     vector<int> S_p = S;
-    srand(time(NULL));
+    // srand(time(NULL));
     for (int k = 0; k < numChanges; k++) {
         int i = rand() % N;
         S_p[i] = -1 * S_p[i];
@@ -98,7 +98,7 @@ vector<int> randMovePM(vector<int> &S, int numChanges) {
 
 vector<int> randMovePrepartition(vector<int> &P, int numChanges) {
     vector<int> P_new = P;
-    srand(time(NULL));
+    // srand(time(NULL));
     for (int k = 0; k < numChanges; k++) {
         int i = rand() % N;
         // generate j such that j != i
@@ -145,7 +145,7 @@ void populateA(MaxHeap &A) {
 // generate random sequence of length N of 1 and -1
 vector<int> genPlusMinus() {
     vector<int> S;
-    srand(time(NULL));
+    // srand(time(NULL));
     for (int i=0; i < N; i++) {
         int r = rand() % 2 == 0 ? -1 : 1;
         S.push_back(r);
@@ -157,7 +157,7 @@ vector<int> genPlusMinus() {
 //      range [0, N-1]
 vector<int> genRandPartition() {
     vector<int> P;
-    srand(time(NULL));
+    // srand(time(NULL));
     for (int i = 0; i < N; i++) {
         int r = rand() % N;
         P.push_back(r);
@@ -328,6 +328,7 @@ int main(int argc, char** argv) {
     
     // 'A' is our list of values that we want to partition
     MaxHeap A;
+    srand(time(NULL));
 
     // if flag is 0 we run the real algorithm
     if (strtol(argv[1], nullptr, 0) == 0) {
@@ -393,6 +394,7 @@ int main(int argc, char** argv) {
         }
 
         vector<long> totalResidues(7, 0);
+        vector<long> minResidue(7, LONG_MAX);
 
         for (int i = 0; i < 50; i++) {
             populateA(A);
@@ -404,26 +406,44 @@ int main(int argc, char** argv) {
 
             residue = repeatedRandom(A, true);
             totalResidues[1] += residue;
+            if (residue < minResidue[1]) {
+                minResidue[1] = residue;
+            }
             A = A_parent;
 
             residue = hillClimbing(A, true);
             totalResidues[2] += residue;
+            if (residue < minResidue[2]) {
+                minResidue[2] = residue;
+            }
             A = A_parent;
 
             residue = simulatedAnnealing(A, true);
             totalResidues[3] += residue;
+            if (residue < minResidue[3]) {
+                minResidue[3] = residue;
+            }
             A = A_parent;
 
             residue = repeatedRandom(A, false);
             totalResidues[4] += residue;
+            if (residue < minResidue[4]) {
+                minResidue[4] = residue;
+            }
             A = A_parent;
 
             residue = hillClimbing(A, false);
             totalResidues[5] += residue;
+            if (residue < minResidue[5]) {
+                minResidue[5] = residue;
+            }
             A = A_parent;
 
             residue = simulatedAnnealing(A, false);
             totalResidues[6] += residue;
+            if (residue < minResidue[6]) {
+                minResidue[6] = residue;
+            }
     
             A.clear();
         }
@@ -432,12 +452,24 @@ int main(int argc, char** argv) {
         cout << setprecision(2);
 
         cout << "KK Algorithm: " << totalResidues[0]/50. << endl;
+
         cout << "Repeated Random PM: " << totalResidues[1]/50. << endl;
+        cout << "min: " << minResidue[1] << endl;
+
         cout << "Hill Climbing PM: " << totalResidues[2]/50. << endl;
+        cout << "min: " << minResidue[2] << endl;
+
         cout << "Simulated Annealing PM: " << totalResidues[3]/50. << endl;
+        cout << "min: " << minResidue[3] << endl;
+
         cout << "Repeated Random Prepartitioned: " << totalResidues[4]/50. << endl;
+        cout << "min: " << minResidue[4] << endl;
+
         cout << "Hill Climbing Prepartitioned: " << totalResidues[5]/50. << endl;
+        cout << "min: " << minResidue[5] << endl;
+
         cout << "Simulated Annealing Prepartitioned: " << totalResidues[6]/50. << endl;
+        cout << "min: " << minResidue[6] << endl;
     }
 
     return 0;
@@ -471,10 +503,10 @@ void MaxHeap::siftDown (int idx) {
 
     int largest = idx;
     // find largest value index
-    if (lChild < heapSize && heap[lChild] > heap[idx]) {
+    if (lChild < int(heapSize) && heap[lChild] > heap[idx]) {
         largest = lChild;
     }
-    if (rChild < heapSize && heap[rChild] > heap[largest]) {
+    if (rChild < int(heapSize) && heap[rChild] > heap[largest]) {
         largest = rChild;
     }
     // if current idx is not smallest index, bubble down
