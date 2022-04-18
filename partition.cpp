@@ -4,7 +4,7 @@
 // #include <utility>
 #include <fstream>
 #include <time.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <assert.h>
 #include <random>
 #include <climits>
@@ -85,36 +85,30 @@ long plusMinusSum(vector<int> S, MaxHeap &A) {
     return abs(residue);
 }
 
-vector<int> randMovePM(vector<int> &S) {
+vector<int> randMovePM(vector<int> &S, int numChanges) {
     vector<int> S_p = S;
     srand(time(NULL));
-    int i = rand() % N;
-    // set si to -si with probability 1/2
-    if (rand() % 2 == 0) {
+    for (int k = 0; k < numChanges; k++) {
+        int i = rand() % N;
         S_p[i] = -1 * S_p[i];
     }
-    // generate j such that j != i
-    int j = rand() % N;
-    while (i == j) {
-        j = rand() % N;
-    }
-    // set sj = -sj
-    S_p[j] = -1 * S_p[j];
 
     return S_p;
 }
 
-vector<int> randMovePrepartition(vector<int> &P) {
+vector<int> randMovePrepartition(vector<int> &P, int numChanges) {
     vector<int> P_new = P;
     srand(time(NULL));
-    int i = rand() % N;
-    // generate j such that j != i
-    int j = rand() % N;
-    while (P_new[i] == j) {
-        j = rand() % N;
+    for (int k = 0; k < numChanges; k++) {
+        int i = rand() % N;
+        // generate j such that j != i
+        int j = rand() % N;
+        while (P_new[i] == j) {
+            i = rand() % N;
+        }
+        // set p_i = j
+        P_new[i] = j;
     }
-    // set p_i = j
-    P_new[i] = j;
 
     return P_new;
 }
@@ -122,13 +116,14 @@ vector<int> randMovePrepartition(vector<int> &P) {
 // given a prepartition, generate A' using algorithm as described in pset
 MaxHeap generateA_p(MaxHeap &A, vector<int> &P) {
     vector<long> V_p(N, 0);
-    MaxHeap A_p;
+    assert(A.size() == P.size());
 
     for (int j = 0; j < N; j++) {
         int p_j = P[j];
-        V_p[p_j] += V_p[p_j] + A.heap[j];
+        V_p[p_j] = V_p[p_j] + A.heap[j];
     }
 
+    MaxHeap A_p;
     for (long entry : V_p) {
         A_p.insert(entry);
     }
@@ -179,7 +174,7 @@ long repeatedRandom(MaxHeap &A, bool plusMinus) {
         for (int i = 0; i < g_NumIterations; i++) {
             vector<int> S_p = genPlusMinus();
             long residue = plusMinusSum(S_p, A);
-            if (residue > bestResidue) {
+            if (residue < bestResidue) {
                 S = S_p;
                 bestResidue = residue;
             }
@@ -192,8 +187,8 @@ long repeatedRandom(MaxHeap &A, bool plusMinus) {
         for (int i = 0; i < g_NumIterations; i++) {
             vector<int> P_r = genRandPartition();
             MaxHeap A_r = generateA_p(A, P_r);
-            long residue = KarmarkarKarp(A_p);
-            if (residue > bestResidue) {
+            long residue = KarmarkarKarp(A_r);
+            if (residue < bestResidue) {
                 P = P_r;
                 A_p = A_r;
                 bestResidue = residue;
@@ -215,7 +210,7 @@ long hillClimbing(MaxHeap& A, bool plusMinus) {
         long bestResidue = plusMinusSum(S, A);
 
         for (int i = 0; i < g_NumIterations; i++) {
-            vector<int> S_p = randMovePM(S);
+            vector<int> S_p = randMovePM(S, 5);
             long currResidue = plusMinusSum(S_p, A);
             if (currResidue < bestResidue) {
                 bestResidue = currResidue;
@@ -236,7 +231,7 @@ long hillClimbing(MaxHeap& A, bool plusMinus) {
         long bestResidue = KarmarkarKarp(A_p);
 
         for (int i = 0; i < g_NumIterations; i++) {
-            vector<int> P_new = randMovePrepartition(P);
+            vector<int> P_new = randMovePrepartition(P, 5);
             A_p = generateA_p(A, P_new);
             long currResidue = KarmarkarKarp(A_p);
 
@@ -269,7 +264,7 @@ long simulatedAnnealing(MaxHeap& A, bool plusMinus) {
         long SResidue = bestResidue;
 
         for (int i = 0; i < g_NumIterations; i++) {
-            vector<int> S_p = randMovePM(S);
+            vector<int> S_p = randMovePM(S, 5);
             long S_pResidue = plusMinusSum(S_p, A);
             long resDiff = -1 * (S_pResidue - SResidue);
 
@@ -288,7 +283,6 @@ long simulatedAnnealing(MaxHeap& A, bool plusMinus) {
                 bestS = S;
             }
         }
-
         return bestResidue;
     }
     // prepartition representation
@@ -296,20 +290,30 @@ long simulatedAnnealing(MaxHeap& A, bool plusMinus) {
         vector<int> P = genRandPartition();
         assert(P.size() == A.size());
         
-        vector<int> bestP = P;
         MaxHeap A_p = generateA_p(A, P);
+        vector<int> bestP = P;
         long bestResidue = KarmarkarKarp(A_p);
+        long prevResidue = bestResidue;
 
         for (int i = 0; i < g_NumIterations; i++) {
-            vector<int> P_new = randMovePrepartition(P);
+            vector<int> P_new = randMovePrepartition(P, 5);
             A_p = generateA_p(A, P_new);
             long currResidue = KarmarkarKarp(A_p);
+            long resDiff = -1 * (currResidue - prevResidue);
+
+            if (currResidue < prevResidue) {
+                P = P_new;
+                prevResidue = currResidue;
+            }
+            else if (rand()/RAND_MAX <= prob_eT(i, resDiff)) {
+                P = P_new;
+                prevResidue = currResidue;
+            }
 
             if (currResidue < bestResidue) {
                 bestResidue = currResidue;
                 bestP = P_new;
             }
-            P = P_new;
         }
 
         return bestResidue;
@@ -340,6 +344,45 @@ int main(int argc, char** argv) {
         while (infile >> entry) {
             A.insert(entry);
         }
+
+        N = A.size();
+
+        int alg = strtol(argv[2], nullptr, 0);
+
+        switch (alg) {
+            case 0:
+                cout << KarmarkarKarp(A) << endl;
+                break;
+
+            case 1:
+                cout << repeatedRandom(A, true) << endl;
+                break;
+
+            case 2:
+                cout << hillClimbing(A, true) << endl;
+                break;
+
+            case 3:
+                cout << simulatedAnnealing(A, true) << endl;
+                break;
+
+            case 11:
+                cout << repeatedRandom(A, false) << endl;
+                break;
+            
+            case 12:
+                cout << hillClimbing(A, false) << endl;
+                break;
+
+            case 13:
+                cout << simulatedAnnealing(A, false) << endl;
+                break;
+
+            default:
+                cout << "No algorithm for "  << alg << endl;
+        }
+
+        return 0;
     }
 
     // testing a single algorithm
@@ -446,8 +489,8 @@ void MaxHeap::siftDown (int idx) {
 void MaxHeap::insert(long v) {
     heap.push_back(v);
     int idx = heapSize;
-    siftUp(idx);
     heapSize++;
+    siftUp(idx);
 }
 
 long MaxHeap::getMax () {
