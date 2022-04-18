@@ -1,0 +1,13 @@
+KK Algorithm: 208623.66
+Repeated Random PM: 4534007671285.66
+min: 337633424076
+Hill Climbing PM: 3590111086521.02
+min: 112090298257
+Simulated Annealing PM: 3590111086521.02
+min: 112090298257
+Repeated Random Prepartitioned: 5548057.66
+min: 132810
+Hill Climbing Prepartitioned: 194895.66
+min: 3050
+Simulated Annealing Prepartitioned: 182159.58
+min: 3050
