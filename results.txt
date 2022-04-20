@@ -39,3 +39,17 @@ Hill Climbing Prepartitioned: 217.84
 min: 1
 Simulated Annealing Prepartitioned: 200.12
 min: 0
+
+KK Algorithm: 301552.64
+Repeated Random PM: 244775709.24
+min: 2253365
+Hill Climbing PM: 318136917.68
+min: 6276713
+Simulated Annealing PM: 246165806.04
+min: 5057655
+Repeated Random Prepartitioned: 122.04
+min: 0
+Hill Climbing Prepartitioned: 199.28
+min: 1
+Simulated Annealing Prepartitioned: 158.80
+min: 0
