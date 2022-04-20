@@ -60,17 +60,20 @@ MaxHeap::MaxHeap() {
 long KarmarkarKarp(MaxHeap &A) {
     while (true) {
         long val1 = A.getMax();
-        long val2 = A.getMax();
-        // if val2 is 0 then all other entries are 0, so 
-        //      val1 is the residue
-        if (val2 == 0) {
+        
+        // if the heap is empty after removing first value
+        //      then this value is the residue
+        if (A.empty()) {
             return val1;
         }
 
+        // otherwise retrieve next value as second largest number
+        long val2 = A.getMax();
+
         long difference = val1 - val2;
 
+        // insert the difference into the heap
         A.insert(difference);
-        A.insert(0);
     }
 }
 
