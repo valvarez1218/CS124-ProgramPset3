@@ -60,17 +60,20 @@ MaxHeap::MaxHeap() {
 long KarmarkarKarp(MaxHeap &A) {
     while (true) {
         long val1 = A.getMax();
-        long val2 = A.getMax();
-        // if val2 is 0 then all other entries are 0, so 
-        //      val1 is the residue
-        if (val2 == 0) {
+        
+        // if the heap is empty after removing first value
+        //      then this value is the residue
+        if (A.empty()) {
             return val1;
         }
 
+        // otherwise retrieve next value as second largest number
+        long val2 = A.getMax();
+
         long difference = val1 - val2;
 
+        // insert the difference into the heap
         A.insert(difference);
-        A.insert(0);
     }
 }
 
@@ -213,10 +216,11 @@ long hillClimbing(MaxHeap& A, bool plusMinus) {
             vector<int> S_p = randMovePM(S, 5);
             long currResidue = plusMinusSum(S_p, A);
             if (currResidue < bestResidue) {
+                // only change S if we found a better solution
+                S = S_p;
                 bestResidue = currResidue;
                 bestS = S_p;
             }
-            S = S_p;
         }
 
         return bestResidue;
@@ -236,10 +240,11 @@ long hillClimbing(MaxHeap& A, bool plusMinus) {
             long currResidue = KarmarkarKarp(A_p);
 
             if (currResidue < bestResidue) {
+                // only change P if we found a better solution
+                P = P_new;
                 bestResidue = currResidue;
                 bestP = P_new;
             }
-            P = P_new;
         }
 
         return bestResidue;
@@ -386,7 +391,7 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    // testing a single algorithm
+    // run algorithms on many different A
     if (strtol(argv[1], nullptr, 0) == 1) {
         if (argc != 2) {
             cout << "Usage: ./partition 1" << endl;
@@ -396,7 +401,8 @@ int main(int argc, char** argv) {
         vector<long> totalResidues(7, 0);
         vector<long> minResidue(7, LONG_MAX);
 
-        for (int i = 0; i < 50; i++) {
+
+        for (int i = 0; i < 50; i++) {            
             populateA(A);
             MaxHeap A_parent = A;
 
@@ -444,7 +450,7 @@ int main(int argc, char** argv) {
             if (residue < minResidue[6]) {
                 minResidue[6] = residue;
             }
-    
+
             A.clear();
         }
 
@@ -471,6 +477,142 @@ int main(int argc, char** argv) {
         cout << "Simulated Annealing Prepartitioned: " << totalResidues[6]/50. << endl;
         cout << "min: " << minResidue[6] << endl;
     }
+
+    // running randomized algorithms on SAME list many times
+    if (strtol(argv[1], nullptr, 0) == 2) {
+        if (argc != 2) {
+            cout << "Usage: ./partition 2" << endl;
+            return -1;
+        }
+
+        vector<long> totalResidues(7, 0);
+        vector<long> minResidue(7, LONG_MAX);
+
+        populateA(A);
+        MaxHeap A_parent = A;
+        long residue = KarmarkarKarp(A);
+        totalResidues[0] += residue;
+        A = A_parent;
+
+        // run each randomized algorithm on A 50 times
+        for (int i = 0; i < 50; i++) {            
+
+            residue = repeatedRandom(A, true);
+            totalResidues[1] += residue;
+            if (residue < minResidue[1]) {
+                minResidue[1] = residue;
+            }
+            A = A_parent;
+
+            residue = hillClimbing(A, true);
+            totalResidues[2] += residue;
+            if (residue < minResidue[2]) {
+                minResidue[2] = residue;
+            }
+            A = A_parent;
+
+            residue = simulatedAnnealing(A, true);
+            totalResidues[3] += residue;
+            if (residue < minResidue[3]) {
+                minResidue[3] = residue;
+            }
+            A = A_parent;
+
+            residue = repeatedRandom(A, false);
+            totalResidues[4] += residue;
+            if (residue < minResidue[4]) {
+                minResidue[4] = residue;
+            }
+            A = A_parent;
+
+            residue = hillClimbing(A, false);
+            totalResidues[5] += residue;
+            if (residue < minResidue[5]) {
+                minResidue[5] = residue;
+            }
+            A = A_parent;
+
+            residue = simulatedAnnealing(A, false);
+            totalResidues[6] += residue;
+            if (residue < minResidue[6]) {
+                minResidue[6] = residue;
+            }
+            A = A_parent;
+        }
+
+        cout << fixed;
+        cout << setprecision(2);
+
+        cout << "KK Algorithm: " << totalResidues[0]/50. << endl;
+
+        cout << "Repeated Random PM: " << totalResidues[1]/50. << endl;
+        cout << "min: " << minResidue[1] << endl;
+
+        cout << "Hill Climbing PM: " << totalResidues[2]/50. << endl;
+        cout << "min: " << minResidue[2] << endl;
+
+        cout << "Simulated Annealing PM: " << totalResidues[3]/50. << endl;
+        cout << "min: " << minResidue[3] << endl;
+
+        cout << "Repeated Random Prepartitioned: " << totalResidues[4]/50. << endl;
+        cout << "min: " << minResidue[4] << endl;
+
+        cout << "Hill Climbing Prepartitioned: " << totalResidues[5]/50. << endl;
+        cout << "min: " << minResidue[5] << endl;
+
+        cout << "Simulated Annealing Prepartitioned: " << totalResidues[6]/50. << endl;
+        cout << "min: " << minResidue[6] << endl;
+    }
+
+    // run algorithms on single A 50 times, output each trial
+    if (strtol(argv[1], nullptr, 0) == 3) {
+        if (argc != 2) {
+            cout << "Usage: ./partition 3" << endl;
+            return -1;
+        }
+
+        vector<vector<long>> allResults(7);
+
+        populateA(A);
+        MaxHeap A_parent = A;
+
+        for (int i = 0; i < 50; i++) {            
+
+            long residue = KarmarkarKarp(A);
+            allResults[0].push_back(residue);
+            A = A_parent;
+
+            residue = repeatedRandom(A, true);
+            allResults[1].push_back(residue);
+            A = A_parent;
+
+            residue = hillClimbing(A, true);
+            allResults[2].push_back(residue);
+            A = A_parent;
+
+            residue = simulatedAnnealing(A, true);
+            allResults[3].push_back(residue);
+            A = A_parent;
+
+            residue = repeatedRandom(A, false);
+            allResults[4].push_back(residue);
+            A = A_parent;
+
+            residue = hillClimbing(A, false);
+            allResults[5].push_back(residue);
+            A = A_parent;
+
+            residue = simulatedAnnealing(A, false);
+            allResults[6].push_back(residue);
+            A = A_parent;
+        }
+
+        for (int i = 0; i < 50; i++) {
+            cout << allResults[0][i] << ", " << allResults[1][i] << ", " << allResults[2][i] << ", " << allResults[3][i] << ", " << allResults[4][i] << ", " 
+                        << allResults[5][i] << ", " << allResults[6][i] << endl;
+        }
+    }
+
 
     return 0;
 }
