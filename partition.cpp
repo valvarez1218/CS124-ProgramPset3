@@ -216,10 +216,11 @@ long hillClimbing(MaxHeap& A, bool plusMinus) {
             vector<int> S_p = randMovePM(S, 5);
             long currResidue = plusMinusSum(S_p, A);
             if (currResidue < bestResidue) {
+                // only change S if we found a better solution
+                S = S_p;
                 bestResidue = currResidue;
                 bestS = S_p;
             }
-            S = S_p;
         }
 
         return bestResidue;
@@ -239,10 +240,11 @@ long hillClimbing(MaxHeap& A, bool plusMinus) {
             long currResidue = KarmarkarKarp(A_p);
 
             if (currResidue < bestResidue) {
+                // only change P if we found a better solution
+                P = P_new;
                 bestResidue = currResidue;
                 bestP = P_new;
             }
-            P = P_new;
         }
 
         return bestResidue;
